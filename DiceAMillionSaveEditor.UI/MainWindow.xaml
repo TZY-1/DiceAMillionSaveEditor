@@ -70,6 +70,135 @@
             <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
         </Style>
 
+        <Style x:Key="ModernComboBoxItem" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#12141c"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#2b3648"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="#334155"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsHighlighted" Value="True">
+                    <Setter Property="Background" Value="#2b3648"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#334155"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ModernComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="{StaticResource InputBg}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ModernComboBoxItem}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="Transparent"
+                                          BorderBrush="Transparent"
+                                          BorderThickness="0"
+                                          OverridesDefaultStyle="True"
+                                          Focusable="False"
+                                          ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <Border x:Name="ComboBorder"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="26"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ContentPresenter Grid.Column="0"
+                                                          Margin="8,0,0,0"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Left"
+                                                          Content="{TemplateBinding SelectionBoxItem}"
+                                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                          ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="▼"
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   FontSize="10"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </ToggleButton>
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   PopupAnimation="Fade">
+                                <Border Background="#12141c"
+                                        BorderBrush="{StaticResource InputBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer MaxHeight="280"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#3b4252"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                            </Trigger>
+                            <Trigger SourceName="ToggleButton" Property="IsChecked" Value="True">
+                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ComboBorder" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
 
     <Grid Margin="20">
@@ -221,6 +350,7 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -228,24 +358,80 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Manual Edits (JSON Properties)" 
                                            FontWeight="SemiBold" FontSize="14" 
                                            Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
                                 <!-- Search Box -->
-                                <Grid Grid.Column="1" Width="260">
+                                <Grid Grid.Column="1" Width="260" Margin="0,0,8,0">
                                     <TextBox Text="{Binding SearchFilter, UpdateSourceTrigger=PropertyChanged}" 
                                              Style="{StaticResource ModernTextBox}" 
-                                             Padding="10,8,30,8"/>
+                                             Padding="10,8,30,8"
+                                             ToolTip="Search in key/value. Supports plain text, wildcard (*, ?), regex (re:pattern or /pattern/)."/>
                                     <TextBlock Text="🔍" FontSize="14" 
                                                HorizontalAlignment="Right" VerticalAlignment="Center" 
                                                Margin="0,0,10,0" IsHitTestVisible="False"
                                                Foreground="{StaticResource TextSecondary}"/>
                                 </Grid>
+                                <Button Grid.Column="2"
+                                        Content="+ Filter"
+                                        Command="{Binding AddFilterRuleCommand}"
+                                        Style="{StaticResource ModernButton}"
+                                        Background="#334155"
+                                        Padding="14,8"/>
                             </Grid>
 
+                            <Border Grid.Row="1" Background="#12141c" CornerRadius="6" Padding="12,10" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Filters (all rules must match)" FontSize="11" FontWeight="SemiBold" 
+                                               Foreground="{StaticResource TextSecondary}" Margin="0,0,0,8"/>
+                                    <ScrollViewer MaxHeight="176"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  CanContentScroll="True">
+                                        <ItemsControl ItemsSource="{Binding FilterRules}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,0,0,8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="110"/>
+                                                            <ColumnDefinition Width="70"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <ComboBox Grid.Column="0"
+                                                                  ItemsSource="{Binding DataContext.FilterFields, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  SelectedItem="{Binding Field, UpdateSourceTrigger=PropertyChanged}"
+                                                                  Style="{StaticResource ModernComboBox}"/>
+                                                        <ComboBox Grid.Column="1"
+                                                                  Margin="8,0,0,0"
+                                                                  ItemsSource="{Binding DataContext.FilterOperators, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                  SelectedItem="{Binding Operator, UpdateSourceTrigger=PropertyChanged}"
+                                                                  Style="{StaticResource ModernComboBox}"/>
+                                                        <TextBox Grid.Column="2"
+                                                                 Margin="8,0,0,0"
+                                                                 Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Style="{StaticResource ModernTextBox}"
+                                                                 ToolTip="Supports plain text, wildcard (*, ?) and regex (re:pattern or /pattern/)."/>
+                                                        <Button Grid.Column="3"
+                                                                Margin="8,0,0,0"
+                                                                Content="Remove"
+                                                                Command="{Binding DataContext.RemoveFilterRuleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource ModernButton}"
+                                                                Background="#3f1d1d"
+                                                                Padding="12,6"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Value hints legend -->
-                <Border Grid.Row="1" Background="#12141c" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
+                <Border Grid.Row="2" Background="#12141c" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Valid values:" FontSize="11" FontWeight="SemiBold" 
                                    Foreground="{StaticResource TextSecondary}" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -271,7 +457,7 @@
                     </StackPanel>
                 </Border>
 
-                <DataGrid Grid.Row="2" 
+                <DataGrid Grid.Row="3" 
                           ItemsSource="{Binding FilteredProperties}" 
                           AutoGenerateColumns="False" CanUserAddRows="False" 
                           HeadersVisibility="Column"
@@ -325,7 +511,38 @@
                     </DataGrid.RowStyle>
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Property Key" Binding="{Binding Key}" Width="3*" IsReadOnly="True"/>
-                        <DataGridTextColumn Header="Value" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="2*"/>
+                        <DataGridTemplateColumn Header="Value" Width="2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Value}" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.CellEditingTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <TextBox x:Name="FreeValueEditor"
+                                                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 BorderThickness="0"
+                                                 Padding="0"/>
+                                        <ComboBox x:Name="RestrictedValueEditor"
+                                                  Visibility="Collapsed"
+                                                  ItemsSource="{Binding ValueOptions}"
+                                                  SelectedItem="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEditable="False"
+                                                  Style="{StaticResource ModernComboBox}"
+                                                  BorderThickness="0"
+                                                  Padding="0"/>
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding HasPredefinedValueOptions}" Value="True">
+                                            <Setter TargetName="FreeValueEditor" Property="Visibility" Value="Collapsed"/>
+                                            <Setter TargetName="RestrictedValueEditor" Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellEditingTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
                 </Grid>
