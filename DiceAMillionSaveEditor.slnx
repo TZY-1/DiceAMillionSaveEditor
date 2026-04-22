@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DiceAMillionSaveEditor.UI/DiceAMillionSaveEditor.UI.csproj" />
+  <Project Path="DiceAMillionSaveEditor.Logic/DiceAMillionSaveEditor.Logic.csproj" />
+</Solution>
