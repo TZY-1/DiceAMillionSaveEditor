@@ -423,6 +423,51 @@
                         </DataGrid>
                     </Grid>
                 </TabItem>
+                <TabItem Header="JSON Preview">
+                    <Grid Margin="0,16,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Decoded JSON (Loaded Save)"
+                                   FontWeight="SemiBold"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding LoadedDecodedJson}"
+                                 Style="{StaticResource ModernTextBox}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 AcceptsTab="True"
+                                 TextWrapping="NoWrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 Margin="0,0,0,12"/>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="Changed JSON (Current Edits)"
+                                   FontWeight="SemiBold"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextPrimary}"
+                                   Margin="0,0,0,8"/>
+
+                        <TextBox Grid.Row="3"
+                                 Text="{Binding ModifiedJson}"
+                                 Style="{StaticResource ModernTextBox}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 AcceptsTab="True"
+                                 TextWrapping="NoWrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"/>
+                    </Grid>
+                </TabItem>
             </TabControl>
             </Border>
 

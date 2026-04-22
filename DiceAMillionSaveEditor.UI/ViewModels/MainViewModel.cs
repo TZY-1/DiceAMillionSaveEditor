@@ -1,8 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -37,6 +40,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _logText = "";
 
+    [ObservableProperty]
+    private string _loadedDecodedJson = "No save loaded yet.";
+
+    [ObservableProperty]
+    private string _modifiedJson = "No save loaded yet.";
+
+    private bool _suspendJsonPreviewUpdates;
+
     public ObservableCollection<SavePropertyItem> EditableProperties { get; } = new();
     public ICollectionView FilteredProperties { get; }
     public ObservableCollection<LogEntry> LogEntries { get; } = new();
@@ -60,6 +71,7 @@ public partial class MainViewModel : ObservableObject
         FilteredProperties.Filter = FilterPropertyItem;
         FilteredAchievements = CollectionViewSource.GetDefaultView(FetchedAchievements);
         FilteredAchievements.Filter = FilterAchievementItem;
+        EditableProperties.CollectionChanged += OnEditablePropertiesCollectionChanged;
 
         Log("Ready.", LogLevel.Info);
     }
@@ -107,14 +119,10 @@ public partial class MainViewModel : ObservableObject
             
             var base64 = _saveProvider.ReadSaveFile(SaveFilePath);
             var json = _encoder.Decode(base64);
+            LoadedDecodedJson = PrettyPrintJson(json);
             
             var dict = _jsonModifier.DecodeJsonToDictionary(json);
-            EditableProperties.Clear();
-            
-            foreach (var kvp in dict.OrderBy(x => x.Key))
-            {
-                EditableProperties.Add(new SavePropertyItem { Key = kvp.Key, Value = kvp.Value.ToString() ?? "" });
-            }
+            ReplaceEditableProperties(dict);
             
             Log($"Save file loaded. {EditableProperties.Count} properties found.", LogLevel.Success);
         }
@@ -179,7 +187,7 @@ public partial class MainViewModel : ObservableObject
             var count = achievementsList.Count(a => a.Unlocked);
             Log($"{count} unlocked achievements found.", LogLevel.Success);
 
-            var currentDict = EditableProperties.ToDictionary(x => x.Key, x => (object)x.Value);
+            var currentDict = BuildTypedDictionary();
             var currentJson = _jsonModifier.EncodeDictionaryToJson(currentDict);
 
             var newJson = _jsonModifier.ApplyAchievementsToJson(currentJson, achievementsList, out var logs);
@@ -197,11 +205,8 @@ public partial class MainViewModel : ObservableObject
 
             // Reload into grid
             var newDict = _jsonModifier.DecodeJsonToDictionary(newJson);
-            EditableProperties.Clear();
-            foreach (var kvp in newDict.OrderBy(x => x.Key))
-            {
-                EditableProperties.Add(new SavePropertyItem { Key = kvp.Key, Value = kvp.Value.ToString() ?? "" });
-            }
+            ReplaceEditableProperties(newDict);
+            ModifiedJson = PrettyPrintJson(newJson);
 
             Log("Achievements merged successfully! Review changes and click Save.", LogLevel.Success);
         }
@@ -222,16 +227,18 @@ public partial class MainViewModel : ObservableObject
         {
             IsBusy = true;
             Log("Creating backup...");
-            _backupService.CreateBackup(SaveFilePath);
-            Log("Backup created.", LogLevel.Success);
+            var backupPath = _backupService.CreateBackup(SaveFilePath);
+            Log($"Backup created: {backupPath}", LogLevel.Success);
 
             Log("Encoding save file...");
-            var currentDict = EditableProperties.ToDictionary(x => x.Key, x => (object)x.Value);
+            var currentDict = BuildTypedDictionary();
             var currentJson = _jsonModifier.EncodeDictionaryToJson(currentDict);
             var base64 = _encoder.Encode(currentJson);
             
             _saveProvider.WriteSaveFile(SaveFilePath, base64);
-            Log("Save file written successfully!", LogLevel.Success);
+            var updatedAt = File.GetLastWriteTime(SaveFilePath);
+            Log($"Save file written successfully: {SaveFilePath}", LogLevel.Success);
+            Log($"Updated at: {updatedAt:yyyy-MM-dd HH:mm:ss}", LogLevel.Info);
         }
         catch (Exception ex)
         {
@@ -255,5 +262,115 @@ public partial class MainViewModel : ObservableObject
         LogText = string.IsNullOrEmpty(LogText)
             ? line
             : $"{LogText}{Environment.NewLine}{line}";
+    }
+
+    private Dictionary<string, object> BuildTypedDictionary()
+    {
+        return EditableProperties.ToDictionary(
+            x => x.Key,
+            x => ParseEditableValue(x.Value));
+    }
+
+    private static object ParseEditableValue(string value)
+    {
+        var trimmed = value.Trim();
+
+        if (bool.TryParse(trimmed, out var boolValue))
+        {
+            return boolValue;
+        }
+
+        if (double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out var numericValue))
+        {
+            return numericValue;
+        }
+
+        if (double.TryParse(trimmed, NumberStyles.Float, CultureInfo.CurrentCulture, out numericValue))
+        {
+            return numericValue;
+        }
+
+        return value;
+    }
+
+    private void ReplaceEditableProperties(Dictionary<string, object> dictionary)
+    {
+        _suspendJsonPreviewUpdates = true;
+        EditableProperties.Clear();
+
+        foreach (var kvp in dictionary.OrderBy(x => x.Key))
+        {
+            EditableProperties.Add(new SavePropertyItem
+            {
+                Key = kvp.Key,
+                Value = kvp.Value.ToString() ?? ""
+            });
+        }
+
+        _suspendJsonPreviewUpdates = false;
+        RefreshModifiedJsonPreview();
+    }
+
+    private void OnEditablePropertiesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems != null)
+        {
+            foreach (var oldItem in e.OldItems.OfType<SavePropertyItem>())
+            {
+                oldItem.PropertyChanged -= OnEditablePropertyChanged;
+            }
+        }
+
+        if (e.NewItems != null)
+        {
+            foreach (var newItem in e.NewItems.OfType<SavePropertyItem>())
+            {
+                newItem.PropertyChanged += OnEditablePropertyChanged;
+            }
+        }
+
+        RefreshModifiedJsonPreview();
+    }
+
+    private void OnEditablePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(SavePropertyItem.Key) or nameof(SavePropertyItem.Value))
+        {
+            RefreshModifiedJsonPreview();
+        }
+    }
+
+    private void RefreshModifiedJsonPreview()
+    {
+        if (_suspendJsonPreviewUpdates)
+        {
+            return;
+        }
+
+        if (EditableProperties.Count == 0)
+        {
+            ModifiedJson = "No save loaded yet.";
+            return;
+        }
+
+        try
+        {
+            var currentDict = BuildTypedDictionary();
+            var compactJson = _jsonModifier.EncodeDictionaryToJson(currentDict);
+            ModifiedJson = PrettyPrintJson(compactJson);
+        }
+        catch (Exception ex)
+        {
+            ModifiedJson = $"JSON preview unavailable: {ex.Message}";
+        }
+    }
+
+    private static string PrettyPrintJson(string json)
+    {
+        var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
+        return JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
     }
 }
