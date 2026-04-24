@@ -31,17 +31,22 @@ This is a save game editor for *Dice A Million*.
 
 Most achievement groups map by prefix:
 
-- `dice_*` -> `dicelist_*`
-- `ring_*` -> `ringlist_*`
-- `card_*` -> `cardlist_*`
-- `char_*` -> `charlist_*`
-- `challenge_*` -> `challengelist_*`
-- `boss_*` -> `bosslist_*`
+
+| Achievement Group | Savestate Prefix  |
+| ----------------- | ----------------- |
+| `dice_*`          | `dicelist_*`      |
+| `ring_*`          | `ringlist_*`      |
+| `card_*`          | `cardlist_*`      |
+| `char_*`          | `charlist_*`      |
+| `challenge_*`     | `challengelist_*` |
+| `boss_*`          | `bosslist_*`      |
+
 
 Phone-state special mapping currently supported:
 
-- `misc_piece1` -> `jphonestate` >= `1`
-- `misc_piece2` -> `jphonestate` >= `2`
-- `misc_hollowcall` -> `jphonestate` >= `3`
+- `misc_piece1` -> `jphonestate` = `2`
+- `misc_piece2` -> `jphonestate` = `3`
+- `none` -> `jphonestate` = `0`
+
 
 If an achievement has no mapping yet, the log will show a warning and skip that entry.

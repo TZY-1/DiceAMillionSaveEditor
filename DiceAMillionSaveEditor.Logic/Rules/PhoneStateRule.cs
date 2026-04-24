@@ -36,9 +36,8 @@ public class PhoneStateRule : IAchievementRule
     {
         return apiName.ToLowerInvariant() switch
         {
-            "misc_piece1" => 1,
-            "misc_piece2" => 2,
-            "misc_hollowcall" => 3,
+            "misc_piece1" => 2,
+            "misc_piece2" => 3,
             _ => 0
         };
     }
